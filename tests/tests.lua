@@ -3,7 +3,7 @@
 package.path = package.path .. ";../src/?.lua"
 
 local moopt = require("moopt")
-local motab = require("motab")
+local utils = require("mutils")
 local fails = 0
 
 -- compare two arrays of arrays
@@ -21,10 +21,10 @@ function compare_arrays(a, b)
 end
 
 function compare(a,b)
-    local dbg = os.getenv("MOOPT_DEBUG") and true or false 
+    local dbg = os.getenv("DEBUG_MODE") and true or false 
     if dbg then
-        print(motab.ptable(a, 2, "expected"))
-        print(motab.ptable(b, 2, "actual"))
+        print(utils.ptable(a, 2, "expected"))
+        print(utils.ptable(b, 2, "actual"))
     end
 
     for k,v in pairs(a) do 
