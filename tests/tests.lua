@@ -59,7 +59,7 @@ end
 -------------------------------------------------
 --
 local t1argv = {"-abarg","-c", "-"}
-local t1optstring = ":ab::c:"
+local t1optstring = "+ab::c:"
 local t1exp = {
     {o = 'a', oi = 1, oa = nil, oo = nil},
     {o = 'b', oi = 2, oa = "arg", oo = nil},
@@ -68,7 +68,7 @@ local t1exp = {
 }
 
 local t2argv = {"-ab", "-carg", "-c"} 
-local t2optstring = ":ab:c::"
+local t2optstring = "+ab:c::"
 local t2exp = {
     {o = 'a', oi =  1, oa = nil, oo = nil},
     {o = ':', oi =  2, oa = nil, oo = 'b'},
@@ -78,7 +78,7 @@ local t2exp = {
 }
 
 local t3argv = {"-a", "what", "-barg", "-b", "-c", "arg", "-a", "--", "arg"}
-local t3optstring = ":a:b::c:"
+local t3optstring = "+a:b::c:"
 local t3exp = {
     {o = 'a', oi = 3, oa = 'what', oo = nil},
     {o = 'b', oi = 4, oa = "arg", oo = nil},
@@ -101,21 +101,7 @@ local t4exp = {
 }
 
 local t5argv = {"--abarg","-c", "-", "-c", "--", "arg"}
-local t5optstring = "?a-bc::"
-local t5exp = {
-    {o = '?', oi = 1, oa = nil, oo = '-'},
-    {o = 'a', oi = 1, oa = nil, oo = nil},
-    {o = 'b', oi = 1, oa = nil, oo = nil},
-    {o = 'a', oi = 1, oa = nil, oo = nil},
-    {o = '?', oi = 1, oa = nil, oo = 'r'},
-    {o = '?', oi = 2, oa = nil, oo = 'g'},
-    {o = 'c', oi = 4, oa = '-', oo = nil},
-    {o = 'c', oi = 5, oa = nil, oo = nil},
-    {o = -1, oi = 6, oa = nil, oo = nil}
-}
-
-local t5argv = {"--abarg","-c", "-", "-c", "--", "arg"}
-local t5optstring = "?a-bc::"
+local t5optstring = "+a-bc::"
 local t5exp = {
     {o = '?', oi = 1, oa = nil, oo = '-'},
     {o = 'a', oi = 1, oa = nil, oo = nil},
@@ -261,7 +247,7 @@ local t14exp = {
 
 -- test shorts and longs that only optionally expects arguments, and do NOT pass any arguments
 local t15argv = {"--verbose", "-v", "--path", "-p", "-tlm", "--two", "--three"}
-local t15optstring = "?v::p::tlm::"
+local t15optstring = "+v::p::tlm::"
 local t15longs = {
     verbose = {has_arg=0, val = 'x'},
     path = {has_arg=2, val = 'y'},

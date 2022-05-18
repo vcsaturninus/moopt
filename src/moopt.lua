@@ -247,9 +247,11 @@ function M.getopt_long(argc, argv, optstring, longopts)
     local EXTENDED_MODE = false   -- do use extended features at the expence of greater compliance
 
     if optstring:sub(1,1) == "+" then
-        POSIXLY_CORRECT = true
-    else
         EXTENDED_MODE = true
+        -- beyond this, act as if ':' were specified as the first char in optstring
+        optstring = string.format(":%s", optstring:sub(2,#optstring))
+    else
+        POSIXLY_CORRECT = true
     end
     save_shorts(options, optstring, EXTENDED_MODE)
     if longopts then save_longs(options, longopts) end
