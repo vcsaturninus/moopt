@@ -218,9 +218,7 @@ end
     ? or : and that implementations can allow others as an extension. 
 
     This implementation acccepts '+' as the first optstring character
-    to instruct the function to only use POSIXLY CORRECT features. 
-    By default, this function uses slightly extended behavior.
-    This is much like glibc's getopt implementation.
+    to instruct the function to use extended, non-POSIXLY CORRECT features. 
 
 <-- opt, optind, optarg, optopt
     POSIX specifies the getopt function should return only an int, which is
