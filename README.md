@@ -5,7 +5,7 @@ Pure Lua implementation of POSIX `getopt` and GNU `getopt_long`
 ## Usage overview
 
 
-### Using getopt()
+### Using `getopt()`
 
 ```lua
     #!/usr/bin/lua5.3
@@ -61,8 +61,7 @@ Things to note:
       non-standard behavior). 
       For example, the caller can follow an option character with _two_
       colon characters in `optstring` to mean that it takes an
-      _optional_ rather than a _mandatory_ option argument.
-      For example:
+      _optional_ rather than a _mandatory_ option argument:
        - `a:` specifies an option character 'a' that expects a _mandatory_
           option argument.
        - `a::` specifies an option character 'a' that expects an
@@ -82,7 +81,7 @@ Things to note:
    duplicate error messages.
 
 
-### Using `getopt_long`
+### Using `getopt_long()`
 
 POSIX's `getopt()` greatest disadvantage is that it only parses short
 options and not longer, more mnemonic options. GNU extended the
