@@ -11,7 +11,7 @@ Pure Lua implementation of POSIX `getopt` and GNU `getopt_long`
     #!/usr/bin/lua5.3
 
     local moopt = require("moopt")
-    for opt,optind,optarg,optopt in moopt.getopt(nil, arg, ":a:b:c::") do
+    for opt,optind,optarg,optopt in moopt.getopt(nil, arg, "+a:b:c::") do
         if opt == 'a' then
             print(string.format("option '%s' used, with optarg '%s'", opt, optarg))
         elseif opt == 'b' then
@@ -121,7 +121,7 @@ where:
 
     local moopt = require("moopt")
 
-    local optstring = ':vdl::'
+    local optstring = '+vdl::'
     local longopts = {
         verbose = {val = 'v', has_arg=0},
         debug = {val = 'd', has_arg = 0},
