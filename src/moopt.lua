@@ -16,11 +16,10 @@
 
          - getopt doesn't return the next option directly, and instead it
            returns an iterable object that can be called by the 'for' iterator. 
-           -1 is still returned rather than nil, so the caller must test the
-           first return value and break out of the loop if it's -1. The reason nil
-           is not returned is so that the body of the loop is executed one more
-           time in order for the caller to be able to retrieve the value
-           of optind that's returned last.
+           when the iteration stops, the parsing has ended. If the leftovers argument 
+           (a table) was passed to getopt, this will've been populated with the remaining
+           argv elements that were not consumed by getopt (or getopt_long, of course).
+           The user must deal with these as they see fit.
 
         -  Lua doesn't support pointers (the only types passed by reference are
            tables) so multiple values are returned instead to the caller, rather
@@ -34,7 +33,7 @@
 
 local M={}
 
-M._VERSION = "1.0.0"
+M._VERSION = "2.0.0"
 M._LICENSE = [[
 BSD 2-Clause License
 
@@ -76,9 +75,6 @@ local UNKNOWN = '?'
 -- ':' will be returned in such a case.
 local COLON = ':'
 
--- marks the end of parsing. The caller should stop its loop when this is returned.
-local ITER_END = -1
-
 -- Used to allow the caller to inhibit any stder diagnostics printed by getopt.
 -- Unless set to 0, and provided the first char in optstring is NOT ':', 
 -- print diagnostic msg to stderr when error found.
@@ -95,6 +91,22 @@ function complain(...)
 
     if M.opterr ~= 0 then
         io.stderr:write(msg)
+    end
+end
+
+--[[
+    Populate t with any remaining options in argv that were
+    not consumed by getopt() or getopt_long().
+
+    The user will need to handle these as they see fit after having
+    called getopt or getopt_long.
+--]]
+function get_argv_leftovers(t, argv, ind)
+    if not t then return end
+    assert(type(t) == 'table')
+
+    for i=ind,#argv do
+        table.insert(t, argv[i])
     end
 end
 
@@ -234,9 +246,6 @@ end
     functionality, this function can simply be called with longopts unspecified
     (nil, NOT empty array).
 
---> argc
-    The length of argv : #arg
-
 --> argv
     Lua's arg
 
@@ -259,13 +268,19 @@ end
     all of these as return values. The caller can then easily test these.
 
     NOTE:
-     * opt is the option character or ':' or '?' or -1
+     * opt is the option character or ':' or '?'
      * optind is an index into argv for the next parsing action
      * optarg is any optarg found for opt, else nil
      * optopt is the current character opt found to have caused an error
        condition, else nil.
+     * leftovers must be an empty table which getopt_long will populate with the
+       remaining argv elements that it didn't consume. This is instead of
+       returning -1 for 'opt': instead of returning -1 to mark the end
+       of parsing (and iteration), the iteration stops automatically and
+       the user can continue parsing by iterating over leftovers.
+       if leftovers is nil, it will not get populated.
 --]]
-function M.getopt_long(argc, argv, optstring, longopts)
+function M.getopt_long(argv, leftovers, optstring, longopts)
     local options = {}  -- save long and short options here for O(1) access
     local optind = 1    -- index of argv element containing the next option
     local argv = argv   -- command-line elements to be parsed
@@ -290,12 +305,13 @@ function M.getopt_long(argc, argv, optstring, longopts)
         
         -- we've run out of argv elements'
         if not arg then
-            return ITER_END, optind, optarg, optopt 
+            return nil 
 
-        -- end of option parsing: -1 must be returned AND optind incremented
+        -- end of option parsing: stop iteration and populate leftovers
         elseif arg == "--" then
-            optind = optind+1
-            return ITER_END, optind, optarg, optopt 
+            optind = optind+1 -- everything after '--' is left up to the user to parse
+            get_argv_leftovers(leftovers, argv, optind)
+            return nil
 
         -- long option: deal with it; only look at an argv element starting with '--'
         -- as a long option if longopts is true (=> function called in getopt_long mode)
@@ -307,7 +323,8 @@ function M.getopt_long(argc, argv, optstring, longopts)
 
             if not opt then 
                 complain("cannot parse argv element '%s'", arg) 
-                return ITER_END, optind, optarg, optopt
+                get_argv_leftovers(leftovers, argv, optind)
+                return nil
             end
             opt = opt:sub(3)
 
@@ -395,7 +412,8 @@ function M.getopt_long(argc, argv, optstring, longopts)
         -- character; otoh a valid short option is not a valid long option because
         -- it only starts with a single '-'
         else
-            return ITER_END, optind, optarg, optopt
+            get_argv_leftovers(leftovers, argv, optind)
+            return nil
         end
     end
 
@@ -403,8 +421,8 @@ function M.getopt_long(argc, argv, optstring, longopts)
 end
 
 -- wrapper around getopt_long()
-function M.getopt(argc, argv, optstring)
-    return M.getopt_long(argc, argv, optstring, nil)
+function M.getopt(argv, leftovers, optstring)
+    return M.getopt_long(argv, leftovers, optstring, nil)
 end
 
 --[[
@@ -415,17 +433,13 @@ end
     form:
     {o = OPT, oi = OPTIND, oa = OPTARG, oo = OPTOPT}
 --]]
-function M.test_getopt(argc, argv, optstring, longopts)
+function M.test_getopt(argv, leftovers, optstring, longopts)
     local t = {}
     M.opterr = 0
 
-        for opt, optind, optarg, optopt in M.getopt_long(argc, argv, optstring, longopts) do
-        table.insert(t, {o = opt, oi = optind, oa = optarg, oo = optopt})
-
-        if opt == -1 then 
-            break 
+        for opt, optind, optarg, optopt in M.getopt_long(argv, leftovers, optstring, longopts) do
+            table.insert(t, {o = opt, oi = optind, oa = optarg, oo = optopt})
         end
-    end
 
     return t
 end

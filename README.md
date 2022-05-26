@@ -8,40 +8,45 @@ Pure Lua implementation of POSIX `getopt` and GNU `getopt_long`
 ### Using `getopt()`
 
 ```lua
-    #!/usr/bin/lua5.3
+#!/usr/bin/lua5.3
 
-    local moopt = require("moopt")
-    for opt,optind,optarg,optopt in moopt.getopt(nil, arg, "+a:b:c::") do
-        if opt == 'a' then
-            print(string.format("option '%s' used, with optarg '%s'", opt, optarg))
-        elseif opt == 'b' then
-            print(string.format("option '%s' used, with optarg '%s'", opt, optarg))
-        elseif opt == 'c' then
-            print(string.format("option '%s' used, with optarg '%s'", opt, optarg))
-        elseif opt == '?' then
-            print("unknown option", optopt)
-        elseif opt == ":" then
-            print("missing argument to ", optopt)
-        elseif opt==-1 then
-            print("caught -1, end of parsing")
-            break
-        end
+local moopt = require("moopt")
+local leftovers = {}
+for opt,optind,optarg,optopt in moopt.getopt(arg, leftovers, "+a:b:c::") do
+    if opt == 'a' then
+        print(string.format("option '%s' used, with optarg '%s'", opt, optarg))
+    elseif opt == 'b' then
+        print(string.format("option '%s' used, with optarg '%s'", opt, optarg))
+    elseif opt == 'c' then
+        print(string.format("option '%s' used, with optarg '%s'", opt, optarg))
+    elseif opt == '?' then
+        print("unknown option", optopt)
+    elseif opt == ":" then
+        print("missing argument to ", optopt)
     end
+end
+
+if #leftovers> 0 then
+    print("argv elements left: ")
+    for k,v in pairs(leftovers) do
+        print(v)
+    end
+end
 ```
 
 Things to note:
- * **as with POSIX getopt, -1 is returned to signal the end of parsing.**
-   However, advantage is taken of Lua's higher-level flexibility and
+ * **Advantage is taken of Lua's higher-level flexibility** and
    and a for-loop iterator is used rather than a while loop. This
-   makes usage a bit more straightforward. Ideally, iteration could be
-   completely made use of by returning nil to automatically stop the
-   itarator when the parsing is done -- instead of returning -1.
-   However, this doesn't quite work because when nil is returned as
-   the result (e.g. `opt`) the other return values (`optind`,
-   `optarg`, `optopt`) are not returned anymore. This means the caller
-   would not get the last `optind` value returned by `getopt`, needed
-   if additional parsing must be carried out. This is not acceptable,
-   so -1 is returned instead as described above.
+   makes usage a bit more straightforward. 
+   Unlike POSIX getopt, -1 is never returned to signal the end of parsing.
+   Instead, the iteration ends automatically when there's nothing left
+   in argv or when a condition is met that stops the parser
+   (positional argument unaccounted for, '--' marker etc). Because **-1** is
+   never returned, `getopt()` and `getopt_long()` will fill a
+   `leftovers` table (optional) with the remaining argv elements that
+   have not been consumed. The user can then deal with these as they
+   see fit. if the user does not care about any leftovers, they can
+   specify `leftovers` as nil instead.
 
  * **There are multiple options for the first character in
    `optstring`.** This is used to enable different functionality.
@@ -117,36 +122,43 @@ where:
       character option in `optstring` when in extended mode.
 
 ```lua
-    #!/usr/bin/lua5.3
+#!/usr/bin/lua5.3
 
-    local moopt = require("moopt")
+local moopt = require("moopt")
 
-    local optstring = '+vdl::'
-    local longopts = {
-        verbose = {val = 'v', has_arg=0},
-        debug = {val = 'd', has_arg = 0},
-        log = {val = 'l', has_arg = 2}
-    }
 
-    -- default log path if none specified
-    local default_log_path="/var/log/test.log"
+local leftovers = {}
 
-    for opt,optind,optarg,optopt in moopt.getopt_long(nil, arg, optstring, longopts) do
-        if opt == 'v' then
-            print("called with verbose flag")
-        elseif opt == 'd' then
-            print(string.format("called with debug flag"))
-        elseif opt == 'l' then
-            print(string.format("called with log flag; will log to %s", optarg or default_log_path))
-        elseif opt == '?' then
-            print("unknown option", optopt)
-        elseif opt == ":" then
-            print("missing argument to ", optopt)
-        elseif opt==-1 then
-            print("caught -1, end of parsing")
-            break
-        end
+local optstring = '+vdl::'
+local longopts = {
+    verbose = {val = 'v', has_arg = 0},
+    debug = {val = 'd', has_arg = 0},
+    log = {val = 'l', has_arg = 2}
+}
+
+-- default log path if none specified
+local default_log_path="/var/log/test.log"
+
+for opt,optind,optarg,optopt in moopt.getopt_long(arg, leftovers, optstring, longopts) do
+    if opt == 'v' then
+        print("called with verbose flag")
+    elseif opt == 'd' then
+        print(string.format("called with debug flag"))
+    elseif opt == 'l' then
+        print(string.format("called with log flag; will log to %s", optarg or default_log_path))
+    elseif opt == '?' then
+        print("unknown option", optopt)
+    elseif opt == ":" then
+        print("missing argument to ", optopt)
     end
+end
+
+if #leftovers > 0 then
+    print("argv elements left:")
+    for _,v in pairs(leftovers) do
+        print(v)
+    end
+end
 ```
 
 This sample program may be called in various ways. Assuming the name
