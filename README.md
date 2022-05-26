@@ -37,16 +37,17 @@ end
 Things to note:
  * **Advantage is taken of Lua's higher-level flexibility** and
    and a for-loop iterator is used rather than a while loop. This
-   makes usage a bit more straightforward. 
+   makes usage a bit more straightforward.
    Unlike POSIX getopt, -1 is never returned to signal the end of parsing.
    Instead, the iteration ends automatically when there's nothing left
    in argv or when a condition is met that stops the parser
    (positional argument unaccounted for, '--' marker etc). Because **-1** is
-   never returned, `getopt()` and `getopt_long()` will fill a
-   `leftovers` table (optional) with the remaining argv elements that
-   have not been consumed. The user can then deal with these as they
-   see fit. if the user does not care about any leftovers, they can
-   specify `leftovers` as nil instead.
+   never returned (specifically, `optind` is not returned either on
+   what would be the last iteration marked by returning `-1`), `getopt()`
+   and `getopt_long()` will fill a `leftovers` table (optional) with the
+   remaining argv elements that have not been consumed. The user can then deal
+   with these as they see fit. if the user does not care about any leftovers,
+   they can specify the `leftovers` table as nil instead.
 
  * **There are multiple options for the first character in
    `optstring`.** This is used to enable different functionality.
