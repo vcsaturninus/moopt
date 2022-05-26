@@ -98,6 +98,9 @@ end
     Populate t with any remaining options in argv that were
     not consumed by getopt() or getopt_long().
 
+    Append all argv elements starting with and including argv[ind]
+    to t.
+
     The user will need to handle these as they see fit after having
     called getopt or getopt_long.
 --]]
