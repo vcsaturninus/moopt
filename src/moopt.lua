@@ -1,4 +1,4 @@
-#!/usr/bin/lua5.3
+#!/usr/bin/env lua
 
 --[[
     (c) 2022 vcsaturninus@protonmail.com
@@ -372,6 +372,7 @@ function M.getopt_long(argv, leftovers, optstring, longopts)
                 if comes_last(arg, cidx) then
                     optind, cidx = optind+1, 1
                 end
+                complain("unknown option '-%s'", opt)
                 return UNKNOWN, optind, optarg, optopt
 
             else  -- option recognized
